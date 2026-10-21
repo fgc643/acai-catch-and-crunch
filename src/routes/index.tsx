@@ -166,7 +166,7 @@ function Index() {
             <div className="text-6xl">💜</div>
             <h2 className="font-display text-4xl font-bold">Quase lá! Tente de novo amanhã</h2>
             <p className="text-lg">Você fez <b>{result.score}</b> pontos — faltaram {Math.max(0, s.min_score - result.score)}.</p>
-            <Button variant="game" size="xl" onClick={() => setStep("blocked")}>Jogar novamente</Button>
+            <Button variant="game" size="xl" onClick={() => setStep("form")}>Jogar novamente</Button>
           </section>
         )}
       </div>
