@@ -13,7 +13,8 @@ import { isValidPhone } from "@/lib/game-rules";
 import { isDebugMode, resolveRound, type GameResult } from "@/lib/game-test";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>) => ({ debug: isDebugMode(search.debug) ? 1 : 0 }),
+  validateSearch: (search: Record<string, unknown>): { debug?: number } =>
+    isDebugMode(search["debug"]) ? { debug: 1 } : {},
   head: () => ({
     meta: [
       { title: "Monte o seu Açaí — jogue e ganhe desconto" },

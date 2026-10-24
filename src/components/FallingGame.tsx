@@ -24,7 +24,7 @@ const START_FALL = 4000;
 const END_FALL = 2200;
 const BAD_CHANCE = 0.36;
 
-export function FallingGame({ onEnd, onForceWin }: { onEnd: (score: number) => void; onForceWin?: () => void }) {
+export function FallingGame({ onEnd, onForceWin }: { onEnd: (score: number) => void; onForceWin?: (() => void) | undefined }) {
   const [items, setItems] = useState<Item[]>([]);
   const [pops, setPops] = useState<Pop[]>([]);
   const [score, setScore] = useState(0);
