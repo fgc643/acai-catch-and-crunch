@@ -49,9 +49,9 @@ function Index() {
 
   const start = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return toast.error("Digite seu nome");
-    if (!isValidPhone(phone)) return toast.error("WhatsApp inválido");
-    if (!consent) return toast.error("Marque a caixa de consentimento");
+    if (!name.trim()) { toast.error("Digite seu nome"); return; }
+    if (!isValidPhone(phone)) { toast.error("WhatsApp inválido"); return; }
+    if (!consent) { toast.error("Marque a caixa de consentimento"); return; }
     setBusy(true);
     try {
       const r = await check({ data: { phone } });

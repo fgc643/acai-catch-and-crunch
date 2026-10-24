@@ -8,14 +8,14 @@ export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 export function generateCouponCode(rand: (n: number) => number = secureRandomInt): string {
   let out = "";
-  for (let i = 0; i < 8; i++) out += CODE_ALPHABET[rand(CODE_ALPHABET.length)];
+  for (let i = 0; i < 8; i++) out += CODE_ALPHABET.charAt(rand(CODE_ALPHABET.length));
   return out;
 }
 
 function secureRandomInt(n: number): number {
   const a = new Uint32Array(1);
   crypto.getRandomValues(a);
-  return a[0] % n;
+  return (a[0] ?? 0) % n;
 }
 
 export function normalizePhone(raw: string): string {
