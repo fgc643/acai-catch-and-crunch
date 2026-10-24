@@ -18,6 +18,8 @@ export const Route = createFileRoute("/admin")({
       { name: "description", content: "Valide cupons, veja jogadores e configure o jogo." },
       { property: "og:title", content: "Painel do lojista" },
       { property: "og:description", content: "Valide cupons, veja jogadores e configure o jogo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),

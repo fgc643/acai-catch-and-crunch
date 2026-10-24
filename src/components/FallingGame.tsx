@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { BAD_POINTS, GAME_SECONDS, GOOD_POINTS } from "@/lib/game-rules";
+import { Button } from "@/components/ui/button";
 
 const GOOD = [
   { e: "🍓", n: "morango" },
@@ -16,14 +17,14 @@ const BAD = [
 type Item = { id: number; e: string; good: boolean; x: number; dur: number };
 type Pop = { id: number; x: number; y: number; v: number };
 
-// Tuned so roughly 1 in 4 players reach 150: spawn speeds up and items fall faster over time.
+// Keep the slower fall speed; the longer round offers more chances to score.
 const START_INTERVAL = 950;
 const END_INTERVAL = 520;
 const START_FALL = 4000;
 const END_FALL = 2200;
 const BAD_CHANCE = 0.36;
 
-export function FallingGame({ onEnd }: { onEnd: (score: number) => void }) {
+export function FallingGame({ onEnd, onForceWin }: { onEnd: (score: number) => void; onForceWin?: (() => void) | undefined }) {
   const [items, setItems] = useState<Item[]>([]);
   const [pops, setPops] = useState<Pop[]>([]);
   const [score, setScore] = useState(0);
@@ -39,7 +40,8 @@ export function FallingGame({ onEnd }: { onEnd: (score: number) => void }) {
       const t = Math.min(1, (performance.now() - start) / (GAME_SECONDS * 1000));
       const good = Math.random() > BAD_CHANCE;
       const pool = good ? GOOD : BAD;
-      const pick = pool[Math.floor(Math.random() * pool.length)] ?? pool[0]!;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      if (!pick) return;
       const dur = START_FALL - (START_FALL - END_FALL) * t;
       setItems((s) => [...s, { id: ++idRef.current, e: pick.e, good, x: 8 + Math.random() * 84, dur }]);
       spawnTimer = setTimeout(spawn, START_INTERVAL - (START_INTERVAL - END_INTERVAL) * t);
@@ -86,6 +88,11 @@ export function FallingGame({ onEnd }: { onEnd: (score: number) => void }) {
           <div className="text-3xl font-bold leading-none tabular-nums">{left}s</div>
         </div>
       </div>
+      {onForceWin && <div className="px-5 pb-3"><Button variant="glass" onClick={() => {
+        if (ended.current) return;
+        ended.current = true;
+        onForceWin();
+      }}>Forçar vitória</Button></div>}
       <div className="h-2 mx-5 rounded-full bg-brand-foreground/20 overflow-hidden">
         <div className="h-full bg-brand-2 transition-[width] duration-200" style={{ width: `${(left / GAME_SECONDS) * 100}%` }} />
       </div>
