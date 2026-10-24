@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- All business config (name, colors, logo, discount, min score, coupon days) lives in the single `settings` row; never hardcode per-client values, so the project can be duplicated for other businesses.
+- Player/coupon writes go only through server functions in `src/lib/game.functions.ts` (one play per phone per São Paulo day, enforced by a unique index); admin reads/updates use RLS with the `has_role` admin check.
+- Logo is stored as a resized data URL in `settings.logo_url` because public storage buckets are blocked in this workspace.
