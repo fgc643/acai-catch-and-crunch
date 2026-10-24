@@ -17,10 +17,10 @@ type Item = { id: number; e: string; good: boolean; x: number; dur: number };
 type Pop = { id: number; x: number; y: number; v: number };
 
 // Tuned so roughly 1 in 4 players reach 150: spawn speeds up and items fall faster over time.
-const START_INTERVAL = 780;
-const END_INTERVAL = 360;
-const START_FALL = 2700;
-const END_FALL = 1350;
+const START_INTERVAL = 950;
+const END_INTERVAL = 520;
+const START_FALL = 4000;
+const END_FALL = 2200;
 const BAD_CHANCE = 0.36;
 
 export function FallingGame({ onEnd }: { onEnd: (score: number) => void }) {
