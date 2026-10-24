@@ -10,24 +10,25 @@ import { FallingGame } from "@/components/FallingGame";
 import { DEFAULT_SETTINGS, brandStyle, settingsQuery } from "@/lib/settings";
 import { checkEligibility, submitPlay } from "@/lib/game.functions";
 import { isValidPhone } from "@/lib/game-rules";
+import { isDebugMode, resolveRound, type GameResult } from "@/lib/game-test";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => ({ debug: isDebugMode(search.debug) ? 1 : 0 }),
   head: () => ({
     meta: [
       { title: "Monte o seu Açaí — jogue e ganhe desconto" },
-      { name: "description", content: "Jogue 30 segundos, faça pontos e ganhe um cupom de desconto." },
+      { name: "description", content: "Jogue 45 segundos, faça pontos e ganhe um cupom de desconto." },
       { property: "og:title", content: "Monte o seu Açaí — jogue e ganhe desconto" },
-      { property: "og:description", content: "Jogue 30 segundos, faça pontos e ganhe um cupom de desconto." },
+      { property: "og:description", content: "Jogue 45 segundos, faça pontos e ganhe um cupom de desconto." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
 });
 
 type Step = "home" | "form" | "blocked" | "play" | "saving" | "result";
-type Result =
-  | { status: "won"; score: number; code: string; expiresAt: string; discount: number }
-  | { status: "lost"; score: number }
-  | { status: "already_played" };
+type Result = GameResult;
 
 function maskPhone(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -37,6 +38,8 @@ function maskPhone(v: string) {
 }
 
 function Index() {
+  const { debug: debugParam } = Route.useSearch();
+  const debug = debugParam === 1;
   const { data: s = DEFAULT_SETTINGS } = useQuery(settingsQuery);
   const [step, setStep] = useState<Step>("home");
   const [name, setName] = useState("");
@@ -52,6 +55,7 @@ function Index() {
     if (!name.trim()) { toast.error("Digite seu nome"); return; }
     if (!isValidPhone(phone)) { toast.error("WhatsApp inválido"); return; }
     if (!consent) { toast.error("Marque a caixa de consentimento"); return; }
+    if (debug) { setStep("play"); return; }
     setBusy(true);
     try {
       const r = await check({ data: { phone } });
@@ -67,7 +71,7 @@ function Index() {
     async (score: number) => {
       setStep("saving");
       try {
-        const r = await submit({ data: { name, phone, consent, score } });
+        const r = await resolveRound(debug, score, s, () => submit({ data: { name, phone, consent, score } }));
         if (r.status === "already_played") setStep("blocked");
         else {
           setResult(r as Result);
@@ -78,12 +82,16 @@ function Index() {
         setStep("home");
       }
     },
-    [submit, name, phone, consent],
+    [submit, name, phone, consent, debug, s],
   );
+
+  const forceWin = useCallback(() => {
+    if (debug) void onEnd(Math.max(150, s.min_score));
+  }, [debug, onEnd, s.min_score]);
 
   return (
     <main style={brandStyle(s)} className="min-h-dvh bg-brand-gradient text-brand-foreground">
-      {step === "play" && <FallingGame onEnd={onEnd} />}
+      {step === "play" && <FallingGame onEnd={onEnd} onForceWin={debug ? forceWin : undefined} />}
       <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center px-6 py-8 text-center">
         <header className="flex flex-col items-center gap-2">
           {s.logo_url ? (
@@ -105,6 +113,7 @@ function Index() {
             <Button variant="game" size="xl" onClick={() => setStep("form")}>
               Jogar
             </Button>
+            {debug && <Button variant="glass" onClick={forceWin}>Forçar vitória</Button>}
             <p className="text-sm opacity-80">Toque nos ingredientes bons (+10). Evite 🍅 e 🧅 (−15).</p>
           </section>
         )}
@@ -150,14 +159,15 @@ function Index() {
             <h2 className="font-display text-4xl font-bold">Parabéns! Você ganhou {result.discount}% de desconto!</h2>
             <p className="text-lg">Você fez <b>{result.score}</b> pontos</p>
             <div className="w-full rounded-3xl bg-background p-6 text-foreground shadow-pop">
-              <p className="text-sm uppercase text-muted-foreground">Seu cupom</p>
+              <p className="text-sm uppercase text-muted-foreground">{debug ? "Cupom de teste — sem validade" : "Seu cupom"}</p>
               <p className="font-mono text-4xl font-bold tracking-[0.2em] text-brand">{result.code}</p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Válido até {new Date(result.expiresAt).toLocaleDateString("pt-BR")}
               </p>
             </div>
-            <p className="font-display text-xl">Mostre este código no balcão</p>
-            <p className="text-sm opacity-80">Tire um print desta tela para não perder.</p>
+            {!debug && <p className="font-display text-xl">Mostre este código no balcão</p>}
+            {!debug && <p className="text-sm opacity-80">Tire um print desta tela para não perder.</p>}
+            {debug && <Button variant="glass" onClick={() => setStep("home")}>Testar novamente</Button>}
           </section>
         )}
 

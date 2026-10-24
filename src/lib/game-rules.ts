@@ -1,7 +1,7 @@
-export const GAME_SECONDS = 30;
+export const GAME_SECONDS = 45;
 export const GOOD_POINTS = 10;
 export const BAD_POINTS = -15;
-/** Highest score a real 30s round can reach; anything above is rejected. */
+/** Conservative ceiling for a real round; anything above is rejected. */
 export const MAX_PLAUSIBLE_SCORE = 700;
 
 export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { addDays, effectiveStatus, generateCouponCode, wins } from "@/lib/game-rules";
+import { addDays, effectiveStatus, generateCouponCode, wins, GAME_SECONDS, GOOD_POINTS } from "@/lib/game-rules";
 
 describe("game rules", () => {
+  it("allows 45 seconds while keeping each good ingredient worth 10 points", () => {
+    expect(GAME_SECONDS).toBe(45);
+    expect(GOOD_POINTS).toBe(10);
+  });
   it("coupon code is 8 letters/digits", () => {
     expect(generateCouponCode()).toMatch(/^[A-Z0-9]{8}$/);
   });
