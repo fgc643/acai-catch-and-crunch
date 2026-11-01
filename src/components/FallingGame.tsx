@@ -32,6 +32,9 @@ export function FallingGame({ onEnd, onForceWin }: { onEnd: (score: number) => v
   const ended = useRef(false);
   const hitIds = useRef(new Set<number>());
   const startedAt = useRef(0);
+  const onEndRef = useRef(onEnd);
+
+  useEffect(() => { onEndRef.current = onEnd; }, [onEnd]);
 
   useEffect(() => {
     const start = performance.now();
@@ -57,14 +60,14 @@ export function FallingGame({ onEnd, onForceWin }: { onEnd: (score: number) => v
         ended.current = true;
         clearTimeout(spawnTimer);
         clearInterval(tick);
-        setTimeout(() => onEnd(scoreRef.current), 400);
+        setTimeout(() => onEndRef.current(scoreRef.current), 400);
       }
     }, 200);
     return () => {
       clearTimeout(spawnTimer);
       clearInterval(tick);
     };
-  }, [onEnd]);
+  }, []);
 
   const hit = (it: Item, ev: React.PointerEvent) => {
     if (ended.current || performance.now() - startedAt.current >= GAME_SECONDS * 1000 || hitIds.current.has(it.id)) return;
