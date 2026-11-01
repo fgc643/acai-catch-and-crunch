@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BAD_POINTS, GAME_SECONDS, GOOD_POINTS } from "@/lib/game-rules";
+import { BAD_POINTS, FIRST_SPAWN_MS, GAME_SECONDS, GOOD_POINTS, spawnIntervalMs } from "@/lib/game-rules";
 import { Button } from "@/components/ui/button";
 
 const GOOD = [
@@ -18,8 +18,6 @@ type Item = { id: number; e: string; good: boolean; x: number; dur: number };
 type Pop = { id: number; x: number; y: number; v: number };
 
 // Keep the slower fall speed; the longer round offers more chances to score.
-const START_INTERVAL = 950;
-const END_INTERVAL = 520;
 const START_FALL = 4000;
 const END_FALL = 2200;
 const BAD_CHANCE = 0.36;
@@ -32,21 +30,26 @@ export function FallingGame({ onEnd, onForceWin }: { onEnd: (score: number) => v
   const scoreRef = useRef(0);
   const idRef = useRef(0);
   const ended = useRef(false);
+  const hitIds = useRef(new Set<number>());
+  const startedAt = useRef(0);
 
   useEffect(() => {
     const start = performance.now();
+    startedAt.current = start;
     let spawnTimer: ReturnType<typeof setTimeout>;
     const spawn = () => {
-      const t = Math.min(1, (performance.now() - start) / (GAME_SECONDS * 1000));
+      const elapsed = performance.now() - start;
+      if (ended.current || elapsed >= GAME_SECONDS * 1000) return;
+      const t = elapsed / (GAME_SECONDS * 1000);
       const good = Math.random() > BAD_CHANCE;
       const pool = good ? GOOD : BAD;
       const pick = pool[Math.floor(Math.random() * pool.length)];
       if (!pick) return;
       const dur = START_FALL - (START_FALL - END_FALL) * t;
       setItems((s) => [...s, { id: ++idRef.current, e: pick.e, good, x: 8 + Math.random() * 84, dur }]);
-      spawnTimer = setTimeout(spawn, START_INTERVAL - (START_INTERVAL - END_INTERVAL) * t);
+      spawnTimer = setTimeout(spawn, spawnIntervalMs(elapsed));
     };
-    spawnTimer = setTimeout(spawn, 300);
+    spawnTimer = setTimeout(spawn, FIRST_SPAWN_MS);
     const tick = setInterval(() => {
       const remaining = Math.max(0, GAME_SECONDS - Math.floor((performance.now() - start) / 1000));
       setLeft(remaining);
@@ -64,7 +67,8 @@ export function FallingGame({ onEnd, onForceWin }: { onEnd: (score: number) => v
   }, [onEnd]);
 
   const hit = (it: Item, ev: React.PointerEvent) => {
-    if (ended.current) return;
+    if (ended.current || performance.now() - startedAt.current >= GAME_SECONDS * 1000 || hitIds.current.has(it.id)) return;
+    hitIds.current.add(it.id);
     const v = it.good ? GOOD_POINTS : BAD_POINTS;
     scoreRef.current = Math.max(0, scoreRef.current + v);
     setScore(scoreRef.current);
