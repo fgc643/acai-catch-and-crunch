@@ -1,8 +1,27 @@
 export const GAME_SECONDS = 45;
 export const GOOD_POINTS = 10;
 export const BAD_POINTS = -15;
-/** Conservative ceiling for a real round; anything above is rejected. */
-export const MAX_PLAUSIBLE_SCORE = 700;
+export const FIRST_SPAWN_MS = 300;
+export const START_SPAWN_INTERVAL_MS = 950;
+export const END_SPAWN_INTERVAL_MS = 520;
+
+export function spawnIntervalMs(elapsedMs: number): number {
+  const progress = Math.min(1, Math.max(0, elapsedMs / (GAME_SECONDS * 1000)));
+  return Math.floor(START_SPAWN_INTERVAL_MS - (START_SPAWN_INTERVAL_MS - END_SPAWN_INTERVAL_MS) * progress);
+}
+
+/** Fastest possible schedule, with every item good and hit exactly once. */
+export function maximumSpawnCount(): number {
+  let elapsed = FIRST_SPAWN_MS;
+  let count = 0;
+  while (elapsed < GAME_SECONDS * 1000) {
+    count++;
+    elapsed += spawnIntervalMs(elapsed);
+  }
+  return count;
+}
+
+export const MAX_PLAUSIBLE_SCORE = maximumSpawnCount() * GOOD_POINTS;
 
 export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 

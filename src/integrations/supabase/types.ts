@@ -58,6 +58,30 @@ export type Database = {
           },
         ]
       }
+      game_sessions: {
+        Row: {
+          consumed_at: string | null
+          phone: string
+          played_on: string
+          started_at: string
+          token: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          phone: string
+          played_on: string
+          started_at?: string
+          token?: string
+        }
+        Update: {
+          consumed_at?: string | null
+          phone?: string
+          played_on?: string
+          started_at?: string
+          token?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           consent: boolean

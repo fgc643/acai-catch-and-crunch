@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FallingGame } from "@/components/FallingGame";
 import { DEFAULT_SETTINGS, brandStyle, settingsQuery } from "@/lib/settings";
-import { checkEligibility, submitPlay } from "@/lib/game.functions";
+import { startPlay, submitPlay } from "@/lib/game.functions";
 import { isValidPhone } from "@/lib/game-rules";
 import { isDebugMode, resolveRound, type GameResult } from "@/lib/game-test";
 
@@ -48,7 +48,8 @@ function Index() {
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
-  const check = useServerFn(checkEligibility);
+  const [roundToken, setRoundToken] = useState<string | null>(null);
+  const begin = useServerFn(startPlay);
   const submit = useServerFn(submitPlay);
 
   const start = async (e: React.FormEvent) => {
@@ -59,8 +60,11 @@ function Index() {
     if (debug) { setStep("play"); return; }
     setBusy(true);
     try {
-      const r = await check({ data: { phone } });
-      setStep(r.canPlay ? "play" : "blocked");
+      const r = await begin({ data: { phone } });
+      if (r.canPlay) {
+        setRoundToken(r.token);
+        setStep("play");
+      } else setStep("blocked");
     } catch {
       toast.error("Erro ao verificar. Tente novamente.");
     } finally {
@@ -72,7 +76,10 @@ function Index() {
     async (score: number) => {
       setStep("saving");
       try {
-        const r = await resolveRound(debug, score, s, () => submit({ data: { name, phone, consent, score } }));
+        const r = await resolveRound(debug, score, s, () => {
+          if (!roundToken) throw new Error("Partida não iniciada");
+          return submit({ data: { name, phone, consent, score, token: roundToken } });
+        });
         if (r.status === "already_played") setStep("blocked");
         else {
           setResult(r as Result);
@@ -83,7 +90,7 @@ function Index() {
         setStep("home");
       }
     },
-    [submit, name, phone, consent, debug, s],
+    [submit, name, phone, consent, debug, s, roundToken],
   );
 
   const forceWin = useCallback(() => {
